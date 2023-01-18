@@ -28,6 +28,9 @@ both Maven and Ivy resolvers (the type of resolver can be selected in the dropdo
 Additionally, Polynote supports specifying a URL directly to a jar file - such as `file:///home/jars/myCoolLibrary.jar`. 
 Supported schemas include `http` and `s3` (if Spark is enabled). 
 
+You can place your JVM dependencies in a newline-separated `.txt` file and include that file's URL in your dependencies.
+This will unpack the `.txt` and download each dependency individually. Note that this method will cache all of the JARs included. 
+
 !!!warning
     Note that if you specify a jar directly, Polynote will not resolve any transitive dependencies for this jar. In 
     general, we recommend using GAV coordinates if you can.
@@ -53,8 +56,8 @@ documentation](python.md#python-dependencies) for more details.
 By default, Polynote caches JVM dependencies that are specified with URLs, as well as the [virtual environment created
 for your notebook](python.md#python-dependencies). 
 
-You can choose to manually bust the cache by unfolding the Advanced Options pane for your dependency by clicking on the 
-`...` button next to it. 
+You can choose to manually bust the cache by either appending `?nocache` to the end of the dependency, or by 
+unfolding the Advanced Options pane for your dependency by clicking on the `...` button next to it. 
 
 ![Dependency Caching](images/notebook-configuration-cache.png)
 
@@ -87,8 +90,9 @@ For more details on using Spark with Polynote, check out the [Spark documentatio
 
 The Kernel configuration contains some miscellaneous configuration that affect the runtime environment of the Kernel. 
 
-First, the **Scala version** can be set (independently of the version running on the server). Currently, only 2.11 and
-2.12 are supported (since those are the versions supported by Spark). 
+First, the **Scala version** can be set (independently of the version running on the server). Currently, 2.11 and
+2.12 are supported (since those are the versions supported by Spark). Support for 2.13 is currently in alpha (build
+against Spark 3.2). 
 
 !!!warning
     The Scala version you select must match that of your Spark installation. If you're unsure what that is, just leave 
@@ -98,3 +102,13 @@ In the second section, you can also add **Environment Variables** that will be m
 
 Finally, in the last section you can add any additional **JVM Arguments** that Polynote will set when it launches the 
 Kernel process. 
+
+### Copying Configurations 
+
+The copy and paste buttons below the last section offer easy access to copy all three sections between notebooks. 
+
+When you click the `Copy Configurations` button, your selections will be copied to your clipboard - note that any new changes
+you made to your current notebook's configuration will be copied over, but will _not_ be saved to your current notebook.  
+
+When you click the `Paste Configurations` button, your selections will automatically update and save if the 
+contents of your clipboard represent a valid notebook configuration. 

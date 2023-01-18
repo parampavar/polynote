@@ -275,8 +275,17 @@ select {
 
 }
 
+.create-notebook-section {
+  margin-bottom: 1.25em;
+}
+
+.notebook-templates {
+  width: 100%;
+}
+
 .new-cell-divider {
   height: 0.75em;
+  width: 100%;
   text-align: center;
   line-height: 0.5em;
   padding-top: 1px; // correct '+' location
@@ -287,6 +296,11 @@ select {
 
   &:hover:after, .cell-and-divider:last-child &:after {
     content: '+';
+  }
+
+  // Disable the new cell button on split cells
+  .split-display-container &:hover:after, .split-display-container:last-child &:after {
+    content: '';
   }
 }
 
@@ -397,6 +411,13 @@ select {
 
         &.output {
           display: block;
+
+          // If small screen while trying to split, hide the exec-info to avoid the cell's toolbar becoming extremely tall.
+          .split-display-container & {
+            @media screen and (max-width: 1600px) {
+              display: none;
+            }
+          }
         }
 
         .exec-start::before {
@@ -500,6 +521,28 @@ select {
 
     .cell-input .copy-output {
       display: none;
+    }
+  }
+
+  &.split-display {
+    .cell-input .toggle-split {
+      border-width: 1px;
+      border-style: solid;
+    }
+  }
+
+  &.wrap-output {
+    .cell-output .output {
+      padding-right: 1em;
+      &[mime-type='text/plain'] {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+    }
+
+    .cell-input .toggle-wrap {
+      border-width: 1px;
+      border-style: solid;
     }
   }
 
@@ -1230,6 +1273,13 @@ select {
       .errors {
         padding-left: 1em;
         padding-right: 1em;
+
+        .copy-button {
+          display: inline-block;
+          position: absolute;
+          cursor: pointer;
+          right: 1.75em;
+        }
       }
     }
   }
@@ -1350,6 +1400,17 @@ button.inspect.icon-button {
   transform: scale(1, -1);
 }
 
+.help-icon {
+  margin-left: 0.5em;
+  cursor: pointer;
+  padding: 0;
+  vertical-align: unset;
+}
+
+.help-icon, .help-text {
+  display: inline-block;
+}
+
 .insert-cell-above .icon, .insert-cell-below .icon {
   position: relative;
   //font-size: 16px;
@@ -1391,6 +1452,18 @@ button.inspect.icon-button {
     padding-bottom: 50vh; // allow last cell to scroll up to midpoint
     overflow-y: auto;
     position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    flex-grow: 1;
+
+    .cell-and-divider {
+      width: 100%;
+    }
+
+    .split-display-container {
+      width: 50%;
+    }
   }
 
 }
@@ -1405,7 +1478,7 @@ button.inspect.icon-button {
   }
 }
 
-.ui-panel {
+.ui-panel, .sticky-left-bar {
   h2, h3 {
     font-size: 100%;
     margin: 0;
@@ -1415,34 +1488,39 @@ button.inspect.icon-button {
     grid-area: head;
     font-weight: normal;
   }
+}
 
+.ui-panel {
   & > h2, .ui-panel-header > h2 {
     grid-area: head;
     position: relative;
     user-select: none;
-    .buttons {
+    .left-buttons, .right-buttons {
       position: absolute;
-      right: 0;
       top: .1em;
       bottom: .1em;
       line-height: 1.8em;
-      vertical-align: middle;
+    }
+
+    .right-buttons {
+      right: 0;
       text-align: right;
       padding-right: .25em;
+    }
 
-      button.icon-button {
-        font-size: inherit;
-        padding: 2px;
-        box-sizing: border-box;
-        display: inline-block;
-        width: 1.7em;
-        height: 1.7em;
-        margin: -1px .25em 0;
-        vertical-align: middle;
+    button.icon-button {
+      font-size: inherit;
+      padding: 2px;
+      box-sizing: border-box;
+      display: inline-block;
+      width: 1.7em;
+      height: 1.7em;
+      margin: -1px .25em 0;
+      vertical-align: middle;
+      line-height: 0.5em;
 
-        button.icon-button .icon {
-          font-size: 16px;
-        }
+      button.icon-button .icon {
+        font-size: 16px;
       }
     }
   }
@@ -1499,8 +1577,17 @@ button.inspect.icon-button {
       margin: 4px 0;
       white-space: pre-line;
       position: relative;
+
+      &:hover {
+        cursor: pointer;
+      }
+
       h4 {
         margin-top: 0;
+
+        &:hover {
+          text-decoration: underline;
+        }
       }
 
       .progress {
@@ -1526,24 +1613,35 @@ button.inspect.icon-button {
       }
 
       .close-button {
-        display: none;
-      }
-
-      &:hover .close-button {
         display: block;
         position: absolute;
         right: 1em;
+        cursor: pointer;
       }
 
       &.error {
+        cursor: auto;
+
+        h4:hover {
+          text-decoration: none;
+        }
+
         .progress {
           display: none;
         }
 
-        .close-button {
+        .close-button, .copy-button {
           display: block;
           position: absolute;
+          cursor: pointer;
+        }
+
+        .close-button {
           right: 1em;
+        }
+
+        .copy-button {
+          right: 2.75em;
         }
       }
 
@@ -1802,9 +1900,30 @@ button.inspect.icon-button {
   }
 }
 
+.notebook-config-section {
+  h3:before {
+    content: '▶';
+    width: 1.5em;
+    display: inline-block;
+  }
+
+  &.open h3:before {
+    content: '▼';
+  }
+
+  .notebook-config-section-content {
+    display: none;
+  }
+
+  &.open .notebook-config-section-content {
+    display: block;
+  }
+}
+
 .notebook-config {
   border-radius: 6px;
   padding: 1em;
+  width: 100%;
   /*margin: 1em;*/
 
   h2 {
@@ -1830,6 +1949,10 @@ button.inspect.icon-button {
     font-family: monospace, monospace;
   }
 
+  .help-icon {
+    display: none;
+  }
+
   .content {
     display: none;
     font-size: 86%;
@@ -1840,7 +1963,11 @@ button.inspect.icon-button {
     display: block;
   }
 
-  .notebook-config-section {
+  &.open .help-icon {
+    display: inline-block;
+  }
+
+.notebook-config-section {
     border-radius: 4px;
     border-width: 1px;
     border-style: solid;
@@ -1882,18 +2009,14 @@ button.inspect.icon-button {
       padding: 5px;
       margin-left: 5px;
 
-      h3 {
-        margin: 4px 0 4px 0;
+      h3:before {
+        content: none;
       }
     }
 
     &.show-advanced {
       .advanced {
         display: block;
-      }
-
-      .expand svg {
-        transform: rotate(90deg);
       }
     }
 
@@ -1933,6 +2056,11 @@ button.inspect.icon-button {
   .icon {
     font-size: 16px;
   }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 button {
@@ -1967,7 +2095,7 @@ button {
         transform-origin: bottom left;
         width: fit-content;
 
-        .buttons {
+        .left-buttons, .right-buttons {
           display: none;
         }
       }
@@ -1986,6 +2114,51 @@ button {
     }
   }
 
+  .sticky-left-bar {
+    width: 2.5em;
+    height: 100%;
+
+    div {
+      cursor: pointer;
+      padding: 0.25em 0;
+    }
+
+    h2:first-of-type {
+      margin-top: 1em;
+    }
+
+    h2 {
+      transform: translateY(-100%) rotate(90deg);
+      transform-origin: bottom left;
+      font-size: 12px;
+      padding: 0.75em 0 0 0;
+      margin: 0 0.75em;
+    }
+
+    button {
+      padding: 0;
+      margin: 0em 0.4em 0.4em;
+    }
+
+    .notebooks {
+      button {
+        margin-top: 2.5em;
+      }
+    }
+
+    .summary {
+      button {
+        margin-top: 2.25em;
+      }
+    }
+
+    .search {
+      button {
+        margin-top: 1.5em;
+      }
+    }
+  }
+
   &.left-collapsed {
     grid-template-columns: 2em 1px auto 1px max-content;
 
@@ -1996,11 +2169,9 @@ button {
         border: unset;
 
         h2 {
-          transform: translateY(-100%) rotate(90deg);
-          transform-origin: bottom left;
-          width: fit-content;
+         display: none;
 
-          .buttons {
+          .left-buttons, .right-buttons {
             display: none;
           }
         }
@@ -2112,6 +2283,74 @@ button {
 }
 
 .tree-view {
+  --date-width: 8em;
+  position: relative;
+
+  .heading {
+    scrollbar-gutter: stable;
+    overflow-y: scroll;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 2em;
+    border-bottom: 1px solid;
+
+    .sizer {
+      position: absolute;
+      right: var(--date-width);
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      padding-left: 2px;
+      padding-right: 2px;
+      margin-right: -2px;
+      cursor: col-resize;
+      .border {
+        border-left: 1px solid;
+        border-right: 1px solid;
+        height: 100%;
+      }
+    }
+
+    .columns {
+      display: grid;
+      grid-template-columns: auto var(--date-width);
+      height: 100%;
+      width: 100%;
+      line-height: 2em;
+
+      span {
+        padding-left: 8pt;
+        .ascending, .descending {
+          display: none;
+          svg {
+            height: .6em;
+          }
+        }
+      }
+
+      span.sorting {
+        .ascending { display: inline; }
+      }
+
+      span.sorting.descending {
+        .ascending { display: none; }
+        .descending { display: inline; }
+      }
+    }
+  }
+
+  .tree {
+    overflow-y: scroll;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 2em;
+    scrollbar-gutter: stable;
+    margin-top: 1px;
+  }
 
   ul {
     margin: 0;
@@ -2123,7 +2362,7 @@ button {
     li {
       user-select: none;
       cursor: pointer;
-      padding: 0 1em 0 0;
+      padding: 0;
       position: relative;
 
       ul {
@@ -2163,6 +2402,18 @@ button {
         white-space: nowrap;
         text-decoration: none;
       }
+
+    }
+
+    li.leaf > a > span {
+      display: grid;
+      grid-template-columns: auto var(--date-width);
+      width: 100%;
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
 
     li.leaf > span, li.leaf a {
@@ -2170,6 +2421,19 @@ button {
       padding-left: 36px;
       display: block;
       outline: none;
+
+      .date {
+        padding-left: 8pt;
+      }
+
+      .placeholder-leaf {
+        height: 20px;
+
+        .placeholder-content {
+          height: 14px;
+          margin: auto 0;
+        }
+      }
     }
 
     li.branch {
@@ -2182,6 +2446,7 @@ button {
         line-height: 22px;
         background: transparent;
         border-radius: 0;
+        display: block;
 
         .expander {
           position: absolute;
@@ -2229,29 +2494,55 @@ button {
 
 .notebooks-list {
   position: relative;
-  overflow: auto;
   height: 100%;
 
   .tree-view {
-    padding: .5em 0 1.5em;
-  }
-
-  &.highlight {
-    .tree-view {
-      border-width: 5px;
-      border-style: dashed;
-      border-radius: 10px;
-      transition: border 200ms;
-      ul {
-        filter: blur(2px);
-        opacity: 0.5;
-        transition: all 200ms;
-      }
-    }
+    position: absolute;
+    inset: 0;
   }
 
   &.disabled {
     pointer-events: none;
+  }
+}
+
+.table-of-contents {
+  overflow: auto;
+  height: 100%;
+
+  h2 {
+    font-size: 1.25em;
+    margin: 1em 1.5em 1em 0.75em;
+    padding: 0 0 0 0.75em;
+    font-weight: normal;
+    cursor: pointer;
+    overflow-wrap: break-word;
+  }
+
+  .h2 {
+    margin-left: 2em;
+  }
+
+  .h3 {
+    margin-left: 3em;
+    background-color: transparent !important;
+  }
+
+  .h4 {
+    margin-left: 4em;
+  }
+
+  .h5 {
+    margin-left: 5em;
+  }
+
+  .h6 {
+    margin-left: 6em;
+  }
+
+  .active {
+    font-weight: bold;
+    border-left: 4px solid;
   }
 }
 
@@ -2326,6 +2617,14 @@ button.dialog-button {
   .buttons {
     text-align: right;
     padding: .5em 0;
+  }
+
+  .inline-input-row {
+    display: flex;
+  }
+
+  .inline-input {
+    flex: 1;
   }
 }
 
@@ -2737,6 +3036,7 @@ button.dialog-button {
   text-align: center;
   border-radius: 1em;
   position: relative;
+  width: 100%;
 
   .undo-link {
     font-weight: bold;
@@ -2914,12 +3214,55 @@ button.dialog-button {
   }
 }
 
+.modal-window.search {
+  min-width: 30em;
+
+  table {
+    .small {
+      width: 30em;
+    }
+
+    .large {
+      width: 70em;
+    }
+
+    tbody {
+      max-height: 30em;
+      display: block;
+      overflow-y: scroll;
+    }
+
+    tr:hover {
+      cursor: pointer;
+    }
+
+    td {
+      padding: 0.75em 0.5em;
+      border-bottom: 1px solid;
+      word-break: break-all;
+    }
+  }
+
+  .line {
+    width: 70%;
+    font-family: @code-fonts;
+  }
+
+  .file_cell {
+    font-weight: bold;
+  }
+}
 
 .modal-window.about {
   line-height: 2;
 
   .tab-nav-content {
     padding: 2em;
+
+    .path {
+      max-width: 40em;
+      overflow-wrap: break-word;
+    }
   }
 
   table {
@@ -3113,6 +3456,23 @@ img.icon, svg.icon {
         font-size: inherit;
       }
     }
+  }
+}
+
+.snackbar {
+  width: 25em;
+  margin-left: -12.5em;
+  border-radius: 8px;
+  padding: 16px 32px 24px 16px;
+  position: fixed;
+  z-index: 999;
+  right: 2.5%;
+  bottom: 2em;
+
+  .notification-close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
   }
 }
 

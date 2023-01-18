@@ -6,6 +6,7 @@ import {ServerStateHandler} from "../../state/server_state";
 import {FakeSelect} from "../display/fake_select";
 import {LaTeXEditor} from "../input/latex_editor";
 import {ClientInterpreters} from "../../interpreter/client_interpreter";
+import {UserPreferencesHandler} from "../../state/preferences";
 
 /**
  * The Toolbar. Its contents change depending on the current cell selected, and buttons are disabled when there is
@@ -41,7 +42,8 @@ export class Toolbar extends Disposable {
                             const lang = activeCell.language
                             if (lang === "text") {
                                 this.el.classList.remove('editing-code');
-                                this.el.classList.add('editing-text');
+                                if (!UserPreferencesHandler.state.markdown.value)
+                                    this.el.classList.add('editing-text');
                             } else {
                                 this.el.classList.remove('editing-text');
                                 this.el.classList.add('editing-code');
@@ -245,7 +247,8 @@ class CellToolbar extends ToolbarElement {
 
         this.langSelector.addListener(change => {
             const id = this.nbHandler?.activeCellView?.state?.id;
-            if (this.nbHandler && id !== undefined) {
+            // Check the handler and current cell are defined and that the "text" option was not selected on a split cell
+            if (this.nbHandler && id !== undefined && !(change.newValue == "text" && this.nbHandler?.activeCellView.state?.metadata?.splitDisplay)) {
                 this.nbHandler.setCellLanguage(id, change.newValue, this)
             }
         })
@@ -300,9 +303,13 @@ class CodeToolbar extends ToolbarElement {
                     .click(() => {
                         if (this.dispatcher) this.dispatcher.runActiveCell();
                     }),
-                this.runToButton = iconButton(["run-cell", "to-cursor"], "Run all cells above, then this cell", "fast-forward", "Run to cursor")
+                this.runToButton = iconButton(["run-cell", "to-cursor"], "Run all cells above, then this cell", "run-to", "Run to cursor")
                     .click(() => {
                         if (this.dispatcher) this.dispatcher.runToActiveCell()
+                    }),
+                this.runToButton = iconButton(["run-cell", "from-cursor"], "Run this cell, then all cells below", "run-from", "Run from cursor")
+                    .click(() => {
+                        if (this.dispatcher) this.dispatcher.runFromActiveCell()
                     }),
                 this.cancelButton = iconButton(["stop-cell"], "Stop/cancel this cell", "stop", "Cancel")
                     .click(() => {

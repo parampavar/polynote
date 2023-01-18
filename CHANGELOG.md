@@ -1,5 +1,95 @@
 # Unreleased
 
+# 0.5.0 (Nov 30, 2022) 
+**Features:**
+- Add a table of contents along with a full left navbar redesign #1301 
+  - The new table of contents can be accessed under the `Summary` button in the new left navbar
+  - Headings will automatically be added as you write h1-h6 headings in text cells. Click on a code cell to see where it is 
+  relevant to the closest heading, or click on a heading in the left pane to jump straight to that text cell. 
+  - For full documentation on the new left navbar redesign, [see the docs here. ](https://polynote.org/latest/docs/left-pane/)
+- Display each kernel's time since last run and since last save in settings pane #812 
+
+**Bugfixes:**
+- Fix a few issues where focusing raw markdown cells didn't always render the old markdown cell you left #1315 
+- Use a workaround to fix occasional compilation issues with shadowjars #1352 
+
+**Misc:**
+- Pin Jep back to its default version #1360 
+- Bump to sbt 1.7.2. and fix slash syntax (thanks @MasseGuillaume) #1350 
+- Mention that Scala 2.13 is in alpha support in docs (thanks @pan3793) #1368
+
+# 0.4.10 (Nov 7, 2022)
+**Features:**
+* Added a new design for the notebook list! #1118 
+  * You can now sort notebooks by recently edited timestamp or by name in ascending or descending order. [See docs here. ](https://polynote.org/latest/docs/notebooks-list/) 
+* Support `.txt` dependency lists for JARs #1349 
+  * You can now use `.txt` files as dependencies, where each JAR is listed on a newline. [See docs here. ](https://polynote.org/latest/docs/notebook-configuration/#jvm-dependencies) 
+
+**Bugfixes:**
+* Use relaxed dependency resolution #1300 
+* Remove extra dropdown button on advanced options label #1358 
+
+# 0.4.9 (Oct 18, 2022) 
+**Features:** 
+* Add branch-level granularity for notebook drag n' drop #1298 
+* Add in-app notifications for new updates 
+* Add run selected cell hotkey + VSCode hotkey link #1313 
+* Add more documentation around the PythonObject API #1320 
+
+**Bugfixes:** 
+* Fix a bug where new comments could not be created 
+* Fix an issue with the size of the search modal sometimes not conforming with the result table #1337 
+* Fix error cards in the task pane appearing clickable on hover when they shouldn't be #1316 
+* Fix the Copy & Paste configuration buttons to more accurately reflect the saved kernel state #1314 
+* Add a note to the documentation about using the `?nocache` query string. 
+
+# 0.4.8 (Sep 15, 2022) 
+**Bugfixes:**
+* Fixes a bug where there was no max width set on the search modal 
+* Fixes a bug where the kernel pane would not update on notebook switch 
+* Fixes the link on the Configuration & Dependencies `Learn More` icon  
+
+# 0.4.7 (Sep 15, 2022) 
+**Features:**
+* Added support for searching across all your notebooks! #983 
+  * You can use the new search icon next to the plus in your notebooks list to search across all of your notebooks for a line of text/code 
+* Clicking on a running task card in your `Tasks` pane will now jump you to the corresponding cell #1274 
+* Added help icons throughout various places of the UI #1305 
+  * These will take you directly to the documentation to explain the section of the UI they represent 
+* Added support for copying and pasting notebook configurations between notebooks 
+  * See [here](https://polynote.org/latest/docs/notebook-configuration/#copying-configurations) for documentation 
+* Added dropdowns for each sub-section in the `Configuration & Dependencies` section for easier navigability #1277 
+* Each error in your `Tasks` pane has a copy button that will copy the error message + stack trace for easy sharability #1294 
+  * The stack trace has also been made easier to read. 
+
+**Bugfixes:**
+* Fixed a bug where running tasks that got converted to errors couldn't be closed in the `Tasks` pane 
+* Added a UI label to explain how to use absolute file paths for JARs #1212 
+
+# 0.4.6 (Sep 2, 2022) 
+**Features:** 
+* Notebook templates for creating new notebooks #1190 
+* Allow raw markdown editing in place of RTE #755
+  * There is a preference to toggle between these two text editing modes in your settings 
+* Add a cell button to wrap output text #1038 
+* Add a cell button to split two cells side-by-side in the UI #1023 
+* Add a button to run this cell and all the cells below #1283 
+* Various documentation updates ([new about menu page](https://polynote.org/latest/docs/about-menu/), 
+[templates](https://polynote.org/latest/docs/server-configuration/#templates), 
+[markdown cells](https://polynote.org/latest/docs/text-cells/#markdown-editing), 
+[setting up Polynote's development environment](https://github.com/polynote/polynote/blob/master/DEVELOPING.md), 
+[local Spark setup](https://polynote.org/latest/docs/installation/#spark-support), and more! 
+
+**Bugfixes:** 
+* Fix MRO issue with Python cells having a problem interfacing with Scala collections #1249 
+  * This fix should greatly improve the polyglot experience between Python and Scala! 
+* Fix formatting of intersection types
+* Make it a bit more obvious on how to add a new cell through the UI #1262 
+* Increase the number of dependencies a notebook can have (from 255 to 32767!) #1275 
+  * To handle these larger dependency counts, we've capped the number of concurrent downloads to 16. 
+* Fix `Shift+Enter` not creating the next cell to jump to if none exists #1270 
+* Change 'Open Kernel' to 'Open Notebooks' and add a description of what the pane does #1280  
+
 # 0.4.5 (Feb 15, 2022)
 * Fix bug preventing addition of new cells in empty notebooks #1229
 * Fix a failure in the notebook runner when the notebook has a 'viz' cell #1236

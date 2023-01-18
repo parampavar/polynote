@@ -314,6 +314,13 @@ export function iconButton(classes: string[], title: string, iconName: string, a
     return button(classes, {title: title}, icon([], iconName, alt));
 }
 
+export function helpIconButton(classes: string[], url: string): TagElement<"button"> {
+    classes.push('help-icon');
+    const b = iconButton(classes, "Learn More","circle-help", "Learn More");
+    b.click(() => window.open(url));
+    return b;
+}
+
 export interface InputType {
     text: string
     number: number
@@ -460,9 +467,9 @@ export function h4(classes: string[], content: Content) {
     return tag('h4', classes, {}, content);
 }
 
-export function label(classes: string[], label: string, input: TagElement<"input" | "select" | "textarea">): TagElement<"label"> {
+export function label(classes: string[], label: string, input: TagElement<"input" | "select" | "textarea">, largeLabel: boolean = false): TagElement<"label"> {
     return tag('label', classes, {}, [
-       span(['label-title'], label),
+       largeLabel ? h4(['label-title'], label) : span(['label-title'], label),
        input
     ]);
 }

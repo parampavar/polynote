@@ -62,7 +62,15 @@ export interface CellState {
 
 export type CompletionHint = { cell: number, offset: number; completions: CompletionCandidate[] }
 export type SignatureHint = { cell: number, offset: number, signatures?: Signatures };
-export type NBConfig = {open: boolean, config: NotebookConfig}
+export type NBConfig = {
+    open: boolean,
+    openDependencies: boolean,
+    openResolvers: boolean,
+    openExclusions: boolean,
+    openSpark: boolean,
+    openKernel: boolean,
+    config: NotebookConfig
+}
 
 export type KernelSymbols = Record<string, Record<string, ResultValue>>;
 export type KernelInfo = Record<string, string>;
@@ -160,7 +168,15 @@ export class NotebookStateHandler extends BaseHandler<NotebookState> {
             path,
             cells: {},
             cellOrder: [],
-            config: {open: false, config: NotebookConfig.default},
+            config: {
+                open: false,
+                openDependencies: true,
+                openResolvers: true,
+                openExclusions: true,
+                openSpark: true,
+                openKernel: true,
+                config: NotebookConfig.default
+            },
             kernel: {
                 symbols: {},
                 status: 'disconnected',
@@ -305,7 +321,7 @@ export class NotebookStateHandler extends BaseHandler<NotebookState> {
         this.insertCell("below", {
             id: result.sourceCell,
             language: 'viz',
-            metadata: new CellMetadata(false, false, false),
+            metadata: new CellMetadata(false, false, false, false, false),
             content: JSON.stringify({type: viewType, value: result.name})
         }).then(id => this.selectCell(id))
     }
@@ -341,7 +357,7 @@ export class NotebookStateHandler extends BaseHandler<NotebookState> {
         const cell = this.cellsHandler.state[id];
         this.cellsHandler.updateField(id, () => ({
             language,
-            // clear a bunch of stuff if we're changing to text... hm, maybe we need to do something else when it's a a text cell...
+            // clear a bunch of stuff if we're changing to text... hm, maybe we need to do something else when it's a text cell...
             output: language === "text" ? clearArray() : NoUpdate,
             results: language === "text" ? clearArray() : NoUpdate,
             error: language === "text" ? false : NoUpdate,

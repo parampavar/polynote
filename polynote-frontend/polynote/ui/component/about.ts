@@ -1,5 +1,20 @@
 import {FullScreenModal} from "../layout/modal";
-import {button, div, dropdown, h2, h3, iconButton, loader, polynoteLogo, span, table, tag, TagElement} from "../tags";
+import {
+    a,
+    button,
+    div,
+    dropdown,
+    h2,
+    h3,
+    iconButton,
+    loader,
+    para,
+    polynoteLogo,
+    span,
+    table,
+    tag,
+    TagElement
+} from "../tags";
 import * as monaco from "monaco-editor";
 import {
     Disposable,
@@ -11,12 +26,13 @@ import {TabNav} from "../layout/tab_nav";
 import {getHotkeys} from "../input/hotkeys";
 import {ServerStateHandler} from "../../state/server_state";
 import {
-    clearStorage,
-    LocalStorageHandler, NotebookScrollLocationsHandler, OpenNotebooksHandler,
+    clearStorage, DismissedNotificationsHandler,
+    LocalStorageHandler, NotebookListPrefsHandler, NotebookScrollLocationsHandler, OpenNotebooksHandler,
     RecentNotebooksHandler,
-    UserPreferencesHandler, ViewPrefsHandler
+    UserPreferencesHandler, ViewPrefsHandler, LeftBarPrefsHandler
 } from "../../state/preferences";
 import {ClientBackup} from "../../state/client_backup";
+import {getHumanishDate} from "../../util/helpers";
 
 export class About extends FullScreenModal implements IDisposable {
     private disposable: Disposable;
@@ -71,7 +87,9 @@ export class About extends FullScreenModal implements IDisposable {
     hotkeys() {
         const el = div(["hotkeys-display"], [
             div([], [
-                h2([], ["Press these buttons to do things"])
+                h2([], ["Hotkeys"]),
+                para([], [a([], "https://code.visualstudio.com/docs/getstarted/keybindings#_basic-editing", ["Click here"]),
+                        " to view a full list of the VSCode-style hotkeys supported in code cells."])
             ])
         ]);
 
@@ -178,8 +196,11 @@ export class About extends FullScreenModal implements IDisposable {
         addStorageEl(UserPreferencesHandler)
         addStorageEl(RecentNotebooksHandler)
         addStorageEl(NotebookScrollLocationsHandler)
+        addStorageEl(NotebookListPrefsHandler)
         addStorageEl(OpenNotebooksHandler)
         addStorageEl(ViewPrefsHandler)
+        addStorageEl(LeftBarPrefsHandler)
+        addStorageEl(DismissedNotificationsHandler)
 
         storageInfoEl.appendChild(storageTable);
 
@@ -240,11 +261,14 @@ export class About extends FullScreenModal implements IDisposable {
         return el;
     }
 
-    openKernels() {
-        let content = div([], ['Looks like no kernels are open now!']);
+    openNotebooks() {
+        let content = div([], ['Looks like no notebooks are open now!']);
         const el = div(["open-kernels"], [
             div([], [
-                h2([], ["Open Kernels"]),
+                h2([], ["Open Notebooks"]),
+                span([], ["This is a list of all open notebooks alongside their Kernel status. A notebook is " +
+                "considered open if: (1) any client has it open or (2) there is a running kernel associated with it. Note that " +
+                "Polynote may keep a handle open to a notebook after it's closed for up to 30 seconds."]),
                 content
             ])
         ]);
@@ -256,17 +280,24 @@ export class About extends FullScreenModal implements IDisposable {
             observers.forEach(obs => obs.dispose())
 
             const tableEl = table(['kernels'], {
-                header: ['path', 'status', 'actions'],
-                classes: ['path', 'status', 'actions'],
+                header: ['path', 'status', 'lastSaved', 'lastExecuted', 'actions'],
+                classes: ['path', 'status', 'lastSaved', 'lastExecuted', 'actions'],
                 rowHeading: false,
                 addToTop: false
             });
 
-            ServerStateHandler.serverOpenNotebooks.forEach(([path, info]) => {
+            ServerStateHandler.serverOpenNotebooks.forEach(([path, lastSaved, info]) => {
                 const status = info.handler.state.kernel.status;
                 const statusEl = span([], [
                     span(['status'], [status]),
                 ]);
+                const lastSavedEl = para([], [getHumanishDate(lastSaved)]);
+                let lastExecuted = 0;
+                for (const cellState of Object.values(info.handler.state.cells)) {
+                    const startTs = Number(cellState.metadata.executionInfo?.startTs ?? -1);
+                    lastExecuted = Math.max(lastExecuted, startTs);
+                }
+                const lastExecutedEl = para([], [lastExecuted !== 0 ? getHumanishDate(lastExecuted) : "Never"]);
                 const actions = div([], [
                     loader(),
                     iconButton(['start'], 'Start kernel', 'power-off', 'Start').click(() => {
@@ -284,7 +315,7 @@ export class About extends FullScreenModal implements IDisposable {
                     }),
                 ]);
 
-                const rowEl = tableEl.addRow({ path, status: statusEl, actions });
+                const rowEl = tableEl.addRow({ path, status: statusEl, lastSaved: lastSavedEl, lastExecuted: lastExecutedEl, actions });
                 rowEl.classList.add('kernel-status', status)
                 observers.push(info.handler.addPreObserver(prev => {
                     const prevStatus = prev.kernel.status
@@ -400,7 +431,7 @@ export class About extends FullScreenModal implements IDisposable {
             'About': this.aboutMain.bind(this),
             'Hotkeys': this.hotkeys.bind(this),
             'Preferences': this.preferences.bind(this),
-            'Open Kernels': this.openKernels.bind(this),
+            'Open Notebooks': this.openNotebooks.bind(this),
             'Client-side Backups': this.clientBackups.bind(this),
             'State Inspector': this.stateInspector.bind(this),
         };

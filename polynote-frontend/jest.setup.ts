@@ -1,6 +1,7 @@
 // we need to import this inside a `.ts` file. Docs seem to indicate you can rename the jest config to `jest.config.ts`
 // but that wasn't working for me.
 import '@testing-library/jest-dom'
+import 'jest-canvas-mock';
 
 
 // Mock functions that are not implemented in JSDOM (see: https://jestjs.io/docs/en/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom )
@@ -58,6 +59,25 @@ jest.mock("monaco-vim/lib/cm/keymap_vim", () => ({
         }
     }
 }))
+
+// We have to mock the creation of iconButtons here because we are inspecting the entire notebookList, and sometimes
+// the iconButtons will fail to load and return null, which causes the querySelector to crash
+
+jest.mock("./polynote/ui/tags", () => {
+    const original = jest.requireActual("./polynote/ui/tags");
+    return {
+        ...original,
+        iconButton: jest.fn().mockReturnValue(document.createElement("img")),
+        icon: jest.fn().mockReturnValue(document.createElement("img")),
+        helpIconButton: jest.fn().mockReturnValue(document.createElement("img"))
+    }
+});
+
+jest.mock("./polynote/ui/icons", () => {
+    return {
+        loadIcon: jest.fn().mockReturnValue(Promise.resolve(document.createElement("img")))
+    }
+})
 
 // Make these available to jest.
 import {TextEncoder, TextDecoder} from "util";
